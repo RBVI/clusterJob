@@ -150,7 +150,7 @@ public class ClusterJobDataService implements CyJobDataService {
 					}
 				}
 			}
-			suidMap = restoreSUIDs(job, network, oldIds);
+			suidMap = SUIDUtil.restoreSUIDs(job, network, oldIds);
 		}
 
 		// Find the network.  If we can't find one, create one
