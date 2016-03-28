@@ -133,25 +133,24 @@ public class ClusterJobDataService implements CyJobDataService {
 			job = (CyJob)data.get("job");
 
 			// See if this network was saved in the session information
-			network = SUIDUtil.restoreNetwork(job, networkManager, networkSUID);
+			network = SUIDUtil.restoreNetwork(job, networkManager, networkSUID, false);
 
 			List<Long> oldIds = new ArrayList<>();
 			if (network != null) {
 				if (netMap.containsKey("nodes")) {
 					for (Object o: (JSONArray)netMap.get("nodes")) {
-						Long id = (Long)((JSONObject)obj).get("id");
+						Long id = (Long)((JSONObject)o).get("id");
 						if (id != null) oldIds.add(id);
 					}
 				}
 				if (netMap.containsKey("edges")) {
 					for (Object o: (JSONArray)netMap.get("edges")) {
-						Long id = (Long)((JSONObject)obj).get("id");
+						Long id = (Long)((JSONObject)o).get("id");
 						if (id != null) oldIds.add(id);
 					}
 				}
 			}
-
-			suidMap = SUIDUtil.restoreSUIDs(job, network, oldIds);
+			suidMap = SUIDUtil.restoreSUIDs(job, network, oldIds, false);
 		}
 
 		// Find the network.  If we can't find one, create one
