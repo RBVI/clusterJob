@@ -32,16 +32,14 @@ public class SubmitJobTask extends AbstractNetworkTask {
 		CyNetwork currentNetwork = appManager.getCurrentNetwork();
 
 		// Get our initial job
-		CyJob job = executionService.getCyJob("ClusterJob", "http://dev/null");
+		CyJob job = executionService.createCyJob("ClusterJob");
 		// Get the data service
 		CyJobDataService dataService = job.getJobDataService();
 		// Add our data
 		CyJobData jobData = dataService.addData(null, "network", currentNetwork, currentNetwork.getNodeList(), null, null);
-		// Save our SUIDs in case we get saved and restored
-		SUIDUtil.saveSUIDs(job, currentNetwork, currentNetwork.getNodeList());
 		// Create our handler
 		ClusterJobHandler jobHandler = new ClusterJobHandler(job, network);
-		job.setJobHandler(jobHandler);
+		job.setJobMonitor(jobHandler);
 		// Submit the job
 		CyJobStatus exStatus = executionService.executeJob(job, null, null, jobData);
 		if (exStatus.getStatus().equals(CyJobStatus.Status.ERROR) ||
@@ -49,6 +47,10 @@ public class SubmitJobTask extends AbstractNetworkTask {
 			monitor.showMessage(TaskMonitor.Level.ERROR, exStatus.toString());
 			return;
 		}
+
+		// Save our SUIDs in case we get saved and restored
+		SUIDUtil.saveSUIDs(job, currentNetwork, currentNetwork.getNodeList());
+
 		CyJobManager manager = registrar.getService(CyJobManager.class);
 		manager.addJob(job, jobHandler, 5);
 	}

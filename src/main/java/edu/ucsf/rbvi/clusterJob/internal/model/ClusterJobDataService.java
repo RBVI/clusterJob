@@ -150,6 +150,7 @@ public class ClusterJobDataService implements CyJobDataService {
 					}
 				}
 			}
+
 			suidMap = SUIDUtil.restoreSUIDs(job, network, oldIds);
 		}
 
@@ -182,12 +183,12 @@ public class ClusterJobDataService implements CyJobDataService {
 	}
 
 	@Override
-	public CyJobData unSerialize(InputStream inputStream) {
-		return unSerialize(new BufferedReader(new InputStreamReader(inputStream)));
+	public CyJobData deserialize(InputStream inputStream) {
+		return deserialize(new BufferedReader(new InputStreamReader(inputStream)));
 	}
 
 	@Override
-	public CyJobData unSerialize(Reader reader) {
+	public CyJobData deserialize(Reader reader) {
 		JSONObject json;
 		JSONParser parser = new JSONParser();
 		try {
@@ -201,7 +202,7 @@ public class ClusterJobDataService implements CyJobDataService {
 	}
 
 	@Override
-	public CyJobData unSerialize(Object object) {
+	public CyJobData deserialize(Object object) {
 		JSONObject json;
 		JSONParser parser = new JSONParser();
 		if (object instanceof JSONObject) {

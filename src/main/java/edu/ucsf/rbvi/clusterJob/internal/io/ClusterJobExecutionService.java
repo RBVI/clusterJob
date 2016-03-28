@@ -18,7 +18,7 @@ import org.cytoscape.jobs.CyJobDataService;
 import org.cytoscape.jobs.CyJobStatus;
 import org.cytoscape.jobs.CyJobStatus.Status;
 import org.cytoscape.jobs.CyJobExecutionService;
-import org.cytoscape.jobs.CyJobHandler;
+import org.cytoscape.jobs.CyJobMonitor;
 import org.cytoscape.jobs.CyJobManager;
 import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.session.CySession;
@@ -94,8 +94,8 @@ public class ClusterJobExecutionService implements CyJobExecutionService {
 	public CyJobDataService getDataService() { return dataService; }
 
 	@Override
-	public CyJob getCyJob(String name, String basePath) {
-		return new ClusterJob(name, basePath, this, dataService, null);
+	public CyJob createCyJob(String name) {
+		return new ClusterJob(name, null, this, dataService, null, null);
 	}
 
 	@Override
@@ -145,7 +145,8 @@ public class ClusterJobExecutionService implements CyJobExecutionService {
 		}
 
 		String jobId = json.get(JOBID).toString();
-		job.setJobId(jobId);
+		clJob.setJobId(jobId);
+		clJob.setBasePath(basePath);
 
 		// return getStatus(json, "Job '"+jobId+"' submitted");
 		return getStatus(json, null);
@@ -157,7 +158,7 @@ public class ClusterJobExecutionService implements CyJobExecutionService {
 			JSONObject result = handleCommand((ClusterJob)job, Command.FETCH, null);
 
 			// Get the unserialized data
-			CyJobData newData = dataService.unSerialize(result);
+			CyJobData newData = dataService.deserialize(result);
 
 			// Merge it in
 			for (String key: newData.keySet()) {
@@ -175,20 +176,24 @@ public class ClusterJobExecutionService implements CyJobExecutionService {
 		CyJob job = null;
 		try {
 			FileReader reader = new FileReader(sessionFile);
-			CyJobData sessionData = dataService.unSerialize(reader);
+			CyJobData sessionData = dataService.deserialize(reader);
 			job = getCyJob(sessionData.get("name").toString(), 
-			               sessionData.get("path").toString());
-			job.setJobId(sessionData.get("JobId").toString());
+			               sessionData.get("path").toString(),
+										 sessionData.get("JobId").toString());
 			job.setPollInterval((Integer)sessionData.get("pollInterval"));
-			String handlerClass = sessionData.get("jobHandler").toString();
+			String handlerClass = sessionData.get("jobMonitor").toString();
 			if (!handlerClass.equals(ClusterJobHandler.class.getCanonicalName())) {
-				cyJobManager.associateHandler(job, handlerClass, -1);
+				cyJobManager.associateMonitor(job, handlerClass, -1);
 			}
 		} catch (FileNotFoundException fnf) {
 			logger.error("Unable to read session file!");
 		}
 
 		return job;
+	}
+
+	private CyJob getCyJob(String name, String basePath, String jobId) {
+		return new ClusterJob(name, basePath, this, dataService, null, jobId);
 	}
 
 	@Override
@@ -199,7 +204,7 @@ public class ClusterJobExecutionService implements CyJobExecutionService {
 		sessionData.put("JobId", job.getJobId());
 		sessionData.put("path", job.getPath());
 		sessionData.put("pollInterval", job.getPollInterval());
-		sessionData.put("jobHandler", job.getJobHandler().getClass().getCanonicalName());
+		sessionData.put("jobMonitor", job.getJobMonitor().getClass().getCanonicalName());
 		String data = dataService.getSerializedData(sessionData).toString();
 		try {
 			FileWriter writer = new FileWriter(sessionFile);
