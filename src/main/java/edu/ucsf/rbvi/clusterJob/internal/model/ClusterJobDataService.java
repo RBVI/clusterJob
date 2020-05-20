@@ -133,7 +133,7 @@ public class ClusterJobDataService implements CyJobDataService {
 			job = (CyJob)data.get("job");
 
 			// See if this network was saved in the session information
-			network = SUIDUtil.restoreNetwork(job, networkManager, networkSUID);
+			network = SUIDUtil.restoreNetwork(job, networkManager, networkSUID, true);
 
 			List<Long> oldIds = new ArrayList<>();
 			if (network != null) {
@@ -151,7 +151,7 @@ public class ClusterJobDataService implements CyJobDataService {
 				}
 			}
 
-			suidMap = SUIDUtil.restoreSUIDs(job, network, oldIds);
+			suidMap = SUIDUtil.restoreSUIDs(job, network, oldIds, true);
 		}
 
 		// Find the network.  If we can't find one, create one
